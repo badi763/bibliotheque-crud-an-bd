@@ -4,10 +4,20 @@ require_once __DIR__ . '/../config/database.php';
 // Récupération de la connexion à la base de données
 $pdo = getDBConnection();
 
+// Démarrage de la session pour les messages
+session_start();
+
 // Variables pour les messages
 $erreurs = [];
 $livre = null;
 $id_livre = null;
+$message_succes = '';
+
+// Récupération du message de succès depuis la session
+if (isset($_SESSION['message_succes'])) {
+    $message_succes = $_SESSION['message_succes'];
+    unset($_SESSION['message_succes']); // Supprime le message après affichage
+}
 
 // Vérification de la présence de l'ID dans l'URL
 if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -52,8 +62,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $livre) {
         $erreurs[] = "L'auteur ne doit pas dépasser 25 caractères.";
     }
     
-    if (!empty($couverture) && strlen($couverture) > 100) {
-        $erreurs[] = "L'URL de la couverture ne doit pas dépasser 100 caractères.";
+    if (!empty($couverture)) {
+        if (strlen($couverture) > 100) {
+            $erreurs[] = "L'URL de la couverture ne doit pas dépasser 100 caractères.";
+        }
+        
+        // Vérification de l'extension d'image
+        $extensions_valides = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+        $extension = strtolower(pathinfo($couverture, PATHINFO_EXTENSION));
+        
+        if (!in_array($extension, $extensions_valides)) {
+            $erreurs[] = "L'URL de la couverture doit avoir une extension d'image valide (.jpg, .jpeg, .png, .gif, .webp, .svg).";
+        }
     }
     
     // Si pas d'erreurs, mise à jour du livre
@@ -72,8 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $livre) {
             $reqUpdate->bindParam(':id_livre', $id_livre, PDO::PARAM_INT);
             $reqUpdate->execute();
             
-            // Redirection vers la liste avec un message de succès
-            header('Location: livres.php?message=edit_success');
+            // Stockage du message de succès dans la session
+            $_SESSION['message_succes'] = "Le livre a été modifié avec succès !";
+            
+            // Redirection vers la même page pour afficher le message
+            header('Location: livre_edit.php?id=' . $id_livre);
             exit;
             
         } catch (Exception $e) {
@@ -105,6 +128,14 @@ include __DIR__ . '/../includes/nav.php';
             </p>
             <?php endif; ?>
         </header>
+
+        <!-- Message de succès -->
+        <?php if (!empty($message_succes)): ?>
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+                <p class="font-bold">✓ Succès</p>
+                <p><?= htmlspecialchars($message_succes) ?></p>
+            </div>
+        <?php endif; ?>
 
         <!-- Affichage des erreurs -->
         <?php if (!empty($erreurs)): ?>

@@ -76,7 +76,7 @@ include __DIR__ . '/../includes/nav.php';
             </article>
         </div>
     </section>
-
+    
     <!-- Section de la liste des abonnés -->
     <section aria-label="Liste des abonnés">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">

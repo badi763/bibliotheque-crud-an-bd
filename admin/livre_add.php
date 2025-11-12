@@ -1,18 +1,75 @@
 <?php
-//début de la ssession
+// Début de la session
 session_start();
 
-//seul l'admin peut accéder à cette page 
+// Seul l'admin peut accéder à cette page
 if (!isset($_SESSION['admin_id'])) {
-    //redirection vers la page de connexion
+    // Redirection vers la page de connexion
     header('Location: ../login.php');
     exit();
 }
-require_once __DIR__ . '/config/database.php';
 
-include __DIR__ . '/includes/header.php';
-include __DIR__ . '/includes/nav.php';
+require_once __DIR__ . '/../config/database.php';
 
+// Récupération de la connexion à la base de données
+$pdo = getDBConnection();
+
+// Initialisation des variables
+$errors = [];
+$titre = '';
+$auteur = '';
+$couverture = '';
+$success = false;
+
+// Traitement du formulaire lors de la soumission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Récupération et nettoyage des données
+    $titre = trim($_POST['titre'] ?? '');
+    $auteur = trim($_POST['auteur'] ?? '');
+    $couverture = trim($_POST['couverture'] ?? '');
+
+    // Validation du titre
+    if (empty($titre)) {
+        $errors[] = "Le titre du livre est obligatoire.";
+    } elseif (strlen($titre) > 30) {
+        $errors[] = "Le titre ne doit pas dépasser 30 caractères.";
+    }
+
+    // Validation de l'auteur
+    if (empty($auteur)) {
+        $errors[] = "L'auteur du livre est obligatoire.";
+    } elseif (strlen($auteur) > 25) {
+        $errors[] = "L'auteur ne doit pas dépasser 25 caractères.";
+    }
+
+    // Validation de la couverture (optionnelle)
+    if (!empty($couverture) && strlen($couverture) > 100) {
+        $errors[] = "L'URL de la couverture ne doit pas dépasser 100 caractères.";
+    }
+
+    // Si aucune erreur, insertion dans la base de données
+    if (empty($errors)) {
+        try {
+            $sql = "INSERT INTO livre (titre, auteur, couverture) VALUES (:titre, :auteur, :couverture)";
+            $stmt = $pdo->prepare($sql);
+            
+            $stmt->bindParam(':titre', $titre);
+            $stmt->bindParam(':auteur', $auteur);
+            $stmt->bindParam(':couverture', $couverture);
+            
+            if ($stmt->execute()) {
+                $success = true;
+                // Redirection après 2 secondes vers la liste des livres
+                header("refresh:2;url=livres.php");
+            }
+        } catch (PDOException $e) {
+            $errors[] = "Erreur lors de l'ajout du livre : " . $e->getMessage();
+        }
+    }
+}
+
+include __DIR__ . '/../includes/header.php';
+include __DIR__ . '/../includes/nav.php';
 ?>
 
 <!-- Contenu principal de la page -->
@@ -30,14 +87,26 @@ include __DIR__ . '/includes/nav.php';
 
         <!-- Formulaire d'ajout -->
         <section class="bg-white rounded-lg shadow-md p-8">
+            
+            <!-- Affichage du message de succès -->
+            <?php if ($success ): ?>
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+                    <p class="font-bold">✓ Succès !</p>
+                    <p>Le livre a été ajouté avec succès. Redirection en cours...</p>
+                </div>
+            <?php endif; ?>
+
             <!-- Affichage des erreurs -->
-            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
-                <p class="font-bold">Erreur(s) :</p>
-                <ul class="list-disc list-inside mt-2">
-                    <li>Grosse erreur 1</li>
-                    <li>Grosse erreur 2</li>
-                </ul>
-            </div>
+            <?php if (!empty($errors)): ?>
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+                    <p class="font-bold">Erreur(s) :</p>
+                    <ul class="list-disc list-inside mt-2">
+                        <?php foreach ($errors as $error): ?>
+                            <li><?= htmlspecialchars($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
 
             <!-- Formulaire -->
             <form method="POST" action="" novalidate>
@@ -52,7 +121,7 @@ include __DIR__ . '/includes/nav.php';
                         name="titre"
                         required
                         maxlength="30"
-                        value=""
+                        value="<?= htmlspecialchars($titre) ?>"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Ex: Les Misérables">
                     <p class="text-gray-500 text-sm mt-1">Maximum 30 caractères</p>
@@ -69,7 +138,7 @@ include __DIR__ . '/includes/nav.php';
                         name="auteur"
                         required
                         maxlength="25"
-                        value=""
+                        value="<?= htmlspecialchars($auteur) ?>"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Ex: VICTOR HUGO">
                     <p class="text-gray-500 text-sm mt-1">Maximum 25 caractères</p>
@@ -85,7 +154,7 @@ include __DIR__ . '/includes/nav.php';
                         id="couverture"
                         name="couverture"
                         maxlength="100"
-                        value=""
+                        value="<?= htmlspecialchars($couverture) ?>"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Ex: images/couvertures/les_miserables.jpg">
                     <p class="text-gray-500 text-sm mt-1">Optionnel - Chemin relatif vers l'image de couverture</p>
@@ -99,7 +168,7 @@ include __DIR__ . '/includes/nav.php';
                 <!-- Boutons d'action -->
                 <div class="flex justify-between items-center">
                     <!-- Bouton Annuler -->
-                    <a href="/bibliotheque/admin/livres.php" class="text-gray-600 hover:text-gray-800 transition font-medium">
+                    <a href="livres.php" class="text-gray-600 hover:text-gray-800 transition font-medium">
                         ← Annuler
                     </a>
 
@@ -114,6 +183,7 @@ include __DIR__ . '/includes/nav.php';
         </section>
     </div>
 </main>
+
 <?php
-include __DIR__ . '/includes/footer.php';
+include __DIR__ . '/../includes/footer.php';
 ?>

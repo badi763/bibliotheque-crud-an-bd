@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 require_once __DIR__ . '/../config/database.php';
 
 // Récupération de la connexion à la base de données
@@ -61,6 +63,14 @@ include __DIR__ . '/../includes/nav.php';
                 <p>La bibliothèque ne contient actuellement aucun livre.</p>
             </div>
         <?php else: ?>
+        <!-- message de modifications -->
+                <?php if (isset($_GET['message']) && $_GET['message'] === 'edit_success'): ?>
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+                <p class="font-bold">✅ Succès</p>
+                <p>La modification du livre a été effectuée avec succès.</p>
+          </div>
+            <?php endif; ?>
+
             <!-- Tableau des livres -->
             <div class="bg-white rounded-lg shadow overflow-hidden">
                 <table class="min-w-full divide-y divide-gray-200">
