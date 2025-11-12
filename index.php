@@ -78,9 +78,9 @@ include __DIR__ . '/includes/nav.php';
                                 <?php else: ?>
                                     <!-- Badge rouge pour les livres empruntés -->
                                     <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow">
-                                        ✗ En prêt
+                                        ✗ En prêt    
                                     </span>
-                                <?php endif; ?>
+                                <?php endif; ?> 
                             </div>
                         </div>
 
@@ -101,6 +101,19 @@ include __DIR__ . '/includes/nav.php';
                             <p class="text-gray-500 text-sm">
                                 Référence : #<?= $livre['id_livre']; ?>
                             </p>
+                                <!--badge pour ajouter au panier -->
+                               <?php if ($livre['statut'] === 'disponible'): ?> 
+    <a href="panier.php?action=add&id=<?= $livre['id_livre']; ?>"
+       class="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow hover:bg-green-600 transition">
+        ➕ Ajouter au panier
+    </a>
+        <a href="panier.php?action=add&id=<?= $livre['id_livre']; ?>"
+       class="inline-block bg-green-500 text-black px-3 py-1 rounded-full text-sm font-semibold shadow hover:bg-green-600 transition">
+       emprunter                        
+    
+       </a>
+<?php endif; ?>
+
                         </div>
                     </article>
                 <?php endforeach; ?>

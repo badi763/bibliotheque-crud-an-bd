@@ -2,6 +2,7 @@
 <nav class="bg-blue-600 text-white shadow-lg" role="navigation" aria-label="Navigation principale">
     <div class="container mx-auto px-4">
         <div class="flex items-center justify-between py-4">
+               
             <!-- Logo et titre -->
             <div class="flex items-center">
                 <a href="/bibliotheque/index.php" class="text-2xl font-bold hover:text-blue-200 transition">
@@ -30,7 +31,7 @@
                             Gérer les livres
                         </a>
                     </li>
-                    <li>
+                    
                         <span class="text-blue-200">
                             Bonjour, <?= $_SESSION['admin_prenom']; ?> 
                         </span>
@@ -44,11 +45,12 @@
 
                 <!-- Liens visibles uniquement pour les abonnés connectés -->
                 <?php elseif (isset($_SESSION['abonne_id'])): ?>
-                    <li>
-                        <a href="/bibliotheque/mes_emprunts.php" class="hover:text-blue-200 transition font-medium">
-                            Mes emprunts
-                        </a>
-                    </li>
+                  <li>
+                        <a href="/bibliotheque/panier.php" class="hover:text-blue-200 transition font-medium">
+                            panier 🛒
+                </li>    
+             
+                  
                     <li>
                         <span class="text-blue-200">
                             Bonjour, <?= $_SESSION['abonne_prenom']; ?>
@@ -60,7 +62,11 @@
                             Déconnexion
                         </a>
                     </li>
-
+   <li>
+                        <a href="/bibliotheque/mon_profil.php" class="hover:text-blue-200 transition font-medium">
+                            ⚙️ Mon profil
+                        </a>
+                    </li>
                 <!-- Lien visible uniquement pour les visiteurs non connectés -->
                 <?php else: ?>
                     <li>
